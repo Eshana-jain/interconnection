@@ -1,0 +1,7 @@
+task,model,auc_roc,f1_withdrawn,accuracy,mae_months,r2,weighted_f1,implausibility_rate
+withdrawal,logistic_regression,0.9492813558264017,0.9081455805892548,0.8675,,,,
+withdrawal,mlp_classifier,0.9455945005383979,0.9321120689655172,0.895,,,,
+timeline,ridge_regression,,,,4.055858617901476,0.6022986142687288,,
+timeline,mlp_regressor,,,,4.127548308960481,0.5896221487665316,,
+cost_bucket,cost_mlp_unconstrained,,,0.8908296943231441,,,0.8868957203985344,0.0
+cost_bucket,cost_mlp_pinn_monotonic,,,0.8864628820960698,,,0.8792917435872202,0.0

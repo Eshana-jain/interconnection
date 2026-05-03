@@ -1,0 +1,50 @@
+{
+  "dataset": {
+    "rows": 12000,
+    "train_rows": 9600,
+    "validation_rows": 1200,
+    "test_rows": 1200,
+    "cost_labeled_rows": 4581,
+    "withdrawal_rate": 0.7725
+  },
+  "withdrawal": {
+    "logistic_regression": {
+      "auc_roc": 0.9492813558264017,
+      "f1_withdrawn": 0.9081455805892548,
+      "accuracy": 0.8675
+    },
+    "mlp_classifier": {
+      "auc_roc": 0.9455945005383979,
+      "f1_withdrawn": 0.9321120689655172,
+      "accuracy": 0.895
+    }
+  },
+  "timeline": {
+    "ridge_regression": {
+      "mae_months": 4.055858617901476,
+      "r2": 0.6022986142687288
+    },
+    "mlp_regressor": {
+      "mae_months": 4.127548308960481,
+      "r2": 0.5896221487665316
+    }
+  },
+  "cost_bucket": {
+    "cost_mlp_unconstrained": {
+      "weighted_f1": 0.8868957203985344,
+      "accuracy": 0.8908296943231441,
+      "implausibility_rate": 0.0
+    },
+    "cost_mlp_pinn_monotonic": {
+      "weighted_f1": 0.8792917435872202,
+      "accuracy": 0.8864628820960698,
+      "implausibility_rate": 0.0
+    }
+  },
+  "gpr_uncertainty": {
+    "mae_log_cost": 0.3665973674571667,
+    "r2_log_cost": 0.7815228504271112,
+    "picp_90": 0.8864628820960698,
+    "mean_interval_width_log_cost": 1.5160647332324935
+  }
+}
