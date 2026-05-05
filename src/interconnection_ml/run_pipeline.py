@@ -10,6 +10,7 @@ from .data import ProjectColumns, load_or_generate
 from .evaluate import (
     make_advanced_analysis_plots,
     make_eda_plots,
+    make_gpr_uncertainty_plot,
     make_result_plots,
     print_summary,
     write_metrics,
@@ -60,7 +61,7 @@ def main() -> None:
         "withdrawal": {name: result.metrics for name, result in withdrawal.items()},
         "timeline": {name: result.metrics for name, result in timeline.items()},
         "cost_bucket": {name: result.metrics for name, result in cost_bucket.items()},
-        "gpr_uncertainty": gpr,
+        "gpr_uncertainty": gpr.metrics,
     }
 
     timeline_pred = None
@@ -71,6 +72,7 @@ def main() -> None:
 
     make_result_plots(splits.test, timeline_pred, metrics, output_dir)
     make_advanced_analysis_plots(data, splits.test, withdrawal, timeline, cost_bucket, output_dir)
+    make_gpr_uncertainty_plot(gpr, output_dir)
     write_metrics(metrics, output_dir)
     write_model_comparison(metrics, output_dir)
     print_summary(metrics)

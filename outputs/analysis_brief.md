@@ -18,3 +18,4 @@ Recommended high-impact figures for slides:
 - `timeline_residual_analysis.png`
 - `cost_bucket_confusion_matrix.png`
 - `pinn_ablation_cost.png`
+- `pinn_ablation_deep_dive.png`

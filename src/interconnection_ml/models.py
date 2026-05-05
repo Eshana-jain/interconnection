@@ -26,6 +26,16 @@ class SupervisedResults:
     scores: np.ndarray | None = None
 
 
+@dataclass
+class GPRResults:
+    metrics: dict[str, float]
+    y_true_log: np.ndarray
+    mean_log: np.ndarray
+    lower_log: np.ndarray
+    upper_log: np.ndarray
+    std_log: np.ndarray
+
+
 class TorchCostMLP(torch.nn.Module):
     def __init__(self, input_dim: int, hidden_dim: int = 64, output_dim: int = 4):
         super().__init__()
@@ -160,11 +170,11 @@ def train_cost_bucket_models(train: pd.DataFrame, test: pd.DataFrame, seed: int,
     return results
 
 
-def train_gpr_cost_model(train: pd.DataFrame, test: pd.DataFrame, seed: int, max_train: int = 650) -> dict[str, float]:
+def train_gpr_cost_model(train: pd.DataFrame, test: pd.DataFrame, seed: int, max_train: int = 650) -> GPRResults:
     train_cost = train.dropna(subset=["network_upgrade_cost_musd"]).reset_index(drop=True)
     test_cost = test.dropna(subset=["network_upgrade_cost_musd"]).reset_index(drop=True)
     if len(train_cost) < 50 or len(test_cost) < 10:
-        return {}
+        return GPRResults(metrics={}, y_true_log=np.array([]), mean_log=np.array([]), lower_log=np.array([]), upper_log=np.array([]), std_log=np.array([]))
 
     if len(train_cost) > max_train:
         train_cost = train_cost.sample(max_train, random_state=seed).reset_index(drop=True)
@@ -182,12 +192,13 @@ def train_gpr_cost_model(train: pd.DataFrame, test: pd.DataFrame, seed: int, max
     lower = mean - 1.645 * std
     upper = mean + 1.645 * std
     picp = np.mean((y_test >= lower) & (y_test <= upper))
-    return {
+    metrics = {
         "mae_log_cost": float(mean_absolute_error(y_test, mean)),
         "r2_log_cost": float(r2_score(y_test, mean)),
         "picp_90": float(picp),
         "mean_interval_width_log_cost": float(np.mean(upper - lower)),
     }
+    return GPRResults(metrics=metrics, y_true_log=y_test, mean_log=mean, lower_log=lower, upper_log=upper, std_log=std)
 
 
 def _train_cost_mlp(
