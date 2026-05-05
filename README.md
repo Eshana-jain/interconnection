@@ -62,7 +62,8 @@ After a successful run, `outputs/` contains:
 
 - `metrics.json`: all evaluation metrics.
 - `model_comparison.csv`: summary table for report figures.
-- `*.png`: class balance, timeline, cost bucket, GPR calibration, and PINN ablation plots.
+- `*.png`: EDA plots, model diagnostics, risk surfaces, feature importance, timeline residuals, cost confusion matrices, and PINN ablation plots.
+- `analysis_brief.md`: generated narrative notes for slides/report writing.
 
 ## Project Structure
 

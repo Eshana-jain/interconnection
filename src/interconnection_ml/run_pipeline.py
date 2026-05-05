@@ -7,7 +7,14 @@ from pathlib import Path
 import numpy as np
 
 from .data import ProjectColumns, load_or_generate
-from .evaluate import make_eda_plots, make_result_plots, print_summary, write_metrics, write_model_comparison
+from .evaluate import (
+    make_advanced_analysis_plots,
+    make_eda_plots,
+    make_result_plots,
+    print_summary,
+    write_metrics,
+    write_model_comparison,
+)
 from .features import split_dataset
 from .models import train_cost_bucket_models, train_gpr_cost_model, train_timeline_models, train_withdrawal_models
 
@@ -63,6 +70,7 @@ def main() -> None:
         timeline_pred = timeline["ridge_regression"].predictions
 
     make_result_plots(splits.test, timeline_pred, metrics, output_dir)
+    make_advanced_analysis_plots(data, splits.test, withdrawal, timeline, cost_bucket, output_dir)
     write_metrics(metrics, output_dir)
     write_model_comparison(metrics, output_dir)
     print_summary(metrics)

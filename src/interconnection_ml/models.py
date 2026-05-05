@@ -23,6 +23,7 @@ class SupervisedResults:
     model: object
     metrics: dict[str, float]
     predictions: np.ndarray
+    scores: np.ndarray | None = None
 
 
 class TorchCostMLP(torch.nn.Module):
@@ -68,6 +69,7 @@ def train_withdrawal_models(train: pd.DataFrame, test: pd.DataFrame, seed: int) 
         results[name] = SupervisedResults(
             model=pipe,
             predictions=pred,
+            scores=proba,
             metrics={
                 "auc_roc": float(roc_auc_score(y_test, proba)),
                 "f1_withdrawn": float(f1_score(y_test, pred)),

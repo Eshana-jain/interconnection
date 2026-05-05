@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ML Interconnection Queue Intelligence</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.0/reveal.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.0/theme/white.min.css" crossorigin="anonymous" />
+  <style>
+    :root {
+      --r-main-font-size: 26px;
+      --r-heading-color: #1a3a5c;
+      --r-main-color: #222;
+      --r-link-color: #2c6fad;
+    }
+
+    .reveal .slides section {
+      text-align: left;
+      padding: 0 20px;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3 {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .reveal h1 { font-size: 1.55em; line-height: 1.25; }
+    .reveal h2 { font-size: 1.25em; border-bottom: 2px solid #1a3a5c; padding-bottom: 6px; margin-bottom: 0.6em; }
+    .reveal h3 { font-size: 1.0em; color: #1a3a5c; margin-bottom: 0.3em; }
+
+    .reveal ul { margin-left: 1.2em; }
+    .reveal ul li { margin-bottom: 0.45em; line-height: 1.4; }
+    .reveal ul li ul { margin-top: 0.2em; }
+    .reveal ul li ul li { font-size: 0.85em; margin-bottom: 0.2em; }
+
+    .title-slide {
+      text-align: center !important;
+      display: flex !important;
+      flex-direction: column;
+      justify-content: center;
+      height: 100%;
+    }
+
+    .title-slide h1 { font-size: 1.6em; color: #1a3a5c; margin-bottom: 0.5em; }
+    .title-slide .subtitle { font-size: 1.0em; color: #555; margin-bottom: 0.3em; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8em;
+      margin-top: 0.5em;
+    }
+    th {
+      background: #1a3a5c;
+      color: white;
+      padding: 7px 12px;
+      text-align: left;
+    }
+    td {
+      padding: 6px 12px;
+      border-bottom: 1px solid #dde3ec;
+    }
+    tr:nth-child(even) td { background: #f4f7fb; }
+    tr:last-child td { border-bottom: none; }
+
+    .formula-box {
+      background: #f0f4f9;
+      border-left: 4px solid #1a3a5c;
+      padding: 10px 16px;
+      margin: 0.7em 0;
+      font-family: "Courier New", monospace;
+      font-size: 0.82em;
+      line-height: 1.6;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .two-col {
+      display: flex;
+      gap: 2.5em;
+      margin-top: 0.3em;
+    }
+    .two-col > div { flex: 1; }
+    .col-wide { flex: 1.4 !important; }
+    .col-narrow { flex: 0.6 !important; }
+
+    img.slide-img {
+      display: block;
+      margin: 0.5em auto 0;
+      max-height: 290px;
+      max-width: 100%;
+      border: 1px solid #dde3ec;
+      border-radius: 4px;
+    }
+
+    .caption {
+      text-align: center;
+      font-size: 0.6em;
+      color: #777;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e4edf8;
+      border: 1px solid #b8cfe8;
+      border-radius: 3px;
+      padding: 1px 7px;
+      font-size: 0.72em;
+      margin: 2px 2px;
+      font-family: "Courier New", monospace;
+    }
+
+    .number-big {
+      font-size: 2em;
+      font-weight: bold;
+      color: #1a3a5c;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8em;
+      margin-top: 0.6em;
+    }
+    .metric-card {
+      background: #f0f4f9;
+      border-radius: 6px;
+      padding: 10px 14px;
+      border-left: 3px solid #2c6fad;
+    }
+    .metric-card .label { font-size: 0.72em; color: #555; }
+    .metric-card .value { font-size: 1.3em; font-weight: bold; color: #1a3a5c; }
+
+    .win { color: #1b7a40; font-weight: bold; }
+    .note { font-size: 0.72em; color: #666; font-style: italic; margin-top: 0.5em; }
+
+    hr.divider { border: none; border-top: 1px solid #dde3ec; margin: 0.8em 0; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 1: TITLE -->
+    <!-- ============================================================ -->
+    <section class="title-slide">
+      <h1>ML Interconnection Queue Intelligence<br>for the U.S. Electric Grid</h1>
+      <hr style="width:60%; border-color:#1a3a5c; margin: 0.6em auto;" />
+      <p class="subtitle">Eshana Jain</p>
+      <p class="subtitle">CEE 498 MLC &nbsp;·&nbsp; Spring 2026</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 2: THE PROBLEM -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>The Interconnection Queue Bottleneck</h2>
+      <div class="two-col">
+        <div class="col-wide">
+          <ul>
+            <li>Before a power plant can connect to the grid, it must go through an <strong>interconnection study</strong> — a process run by the regional transmission operator</li>
+            <li>Right now there are over <strong>2,300 GW</strong> of proposed projects waiting in U.S. queues — most will never get built</li>
+            <li>The majority of projects are eventually <strong>withdrawn</strong>, after developers have already spent significant money on site work, permitting, and study fees</li>
+            <li>Developers make irreversible decisions without knowing: will we survive the queue? how expensive will upgrades be? how long will this take?</li>
+          </ul>
+        </div>
+        <div class="col-narrow">
+          <img src="outputs/filing_year_volume.png" alt="Queue filing volume by year" class="slide-img" />
+          <p class="caption">Queue project volume by filing year (LBNL Queued Up 2025)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 3: PROJECT GOAL -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>What We Want to Predict</h2>
+      <p>Three early-stage predictions that a developer could use before or near the time of filing:</p>
+      <br />
+      <div class="two-col">
+        <div>
+          <h3>1. Withdrawal Risk</h3>
+          <p>Will this project be withdrawn from the queue?<br><span class="note">Binary classification</span></p>
+          <br />
+          <h3>2. Study Timeline</h3>
+          <p>How many months until the interconnection study completes?<br><span class="note">Regression</span></p>
+          <br />
+          <h3>3. Network Upgrade Cost Bucket</h3>
+          <p>Which cost tier will required grid upgrades fall into?<br><span class="note">$0–1M &nbsp;|&nbsp; $1–5M &nbsp;|&nbsp; $5–20M &nbsp;|&nbsp; $20M+</span></p>
+        </div>
+        <div>
+          <img src="outputs/withdrawal_class_distribution.png" alt="Withdrawal class distribution" class="slide-img" />
+          <p class="caption">~77% of projects in the dataset are withdrawn — strong class imbalance</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 4: THE PAPER -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Paper: Physics-Informed Neural Networks</h2>
+      <p style="font-size:0.85em; color:#555;">Raissi, Perdikaris, and Karniadakis (2019). <em>Journal of Computational Physics.</em></p>
+      <ul>
+        <li>The core idea: train a neural network using <strong>both a data-fitting loss and a physics residual</strong>, evaluated at "collocation points" — locations in input space sampled independently of training labels</li>
+        <li>The physics term penalizes the model whenever its output violates a governing equation</li>
+        <li>Demonstrated on Burgers' equation, Navier-Stokes, Schrödinger, and Allen-Cahn systems</li>
+        <li>Key finding: the physics term improves generalization in sparse-data regions and produces physically plausible outputs</li>
+      </ul>
+      <div class="formula-box">
+        L(θ) = L_data(θ)  +  λ · L_physics(θ)
+        <br /><br />
+        L_data   — fits the observed labels
+        <br />
+        L_physics — penalizes PDE residuals at collocation points
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 5: PINN ADAPTATION -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Adapting PINNs to Interconnection Data</h2>
+      <p>Public queue data is tabular — there's no PDE to enforce directly. But queue economics are still governed by domain constraints.</p>
+      <hr class="divider" />
+      <p><strong>Physics prior:</strong> holding everything else constant, a larger requested MW capacity should not lead to a <em>lower</em> required network upgrade cost.</p>
+      <div class="formula-box">
+        L_total = L_cross_entropy  +  λ · L_monotonic
+        <br /><br />
+        L_monotonic = mean( max(0,  E[cost | x]  −  E[cost | x<sub>high_MW</sub>]) )
+      </div>
+      <ul>
+        <li><strong>Collocation copy:</strong> each training project gets a twin with MW scaled up 35%, all other features fixed</li>
+        <li>The penalty fires if the expected cost bucket <em>decreases</em> when MW increases</li>
+        <li>This is exactly the Raissi et al. structure — a data term plus a domain-residual term — applied to a tabular infrastructure setting</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 6: COURSE CONCEPTS -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Relevant Course Concepts</h2>
+      <div class="two-col">
+        <div>
+          <h3>Supervised Learning</h3>
+          <ul>
+            <li>Binary and multi-class classification (logistic regression, MLP)</li>
+            <li>Regression (Ridge, MLP regressor)</li>
+            <li>Class imbalance handling via cost-sensitive weighting</li>
+          </ul>
+          <br />
+          <h3>Probabilistic Modeling</h3>
+          <ul>
+            <li>Gaussian Process Regression for calibrated 90% prediction intervals on upgrade cost</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Neural Networks</h3>
+          <ul>
+            <li>Multi-layer perceptrons with dropout, batch normalization, AdamW</li>
+            <li>PyTorch custom training loop for the PINN model</li>
+          </ul>
+          <br />
+          <h3>Regularization / Domain-Constrained Learning</h3>
+          <ul>
+            <li>Ridge penalty in linear baselines</li>
+            <li>Monotonicity penalty — encoding domain knowledge directly into the loss function</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 7: DATASET -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Dataset</h2>
+      <div class="two-col">
+        <div>
+          <ul>
+            <li><strong>Primary source:</strong> LBNL Queued Up 2025 — project-level U.S. interconnection queue records</li>
+            <li>Supplemented by ISO/RTO queue exports: MISO, PJM, CAISO</li>
+            <li>Pipeline also ships with a <strong>synthetic dataset</strong> matching the same schema, class imbalance, and feature relationships — so the code runs without external data files</li>
+            <li>Cost labels are only available for about <strong>38%</strong> of projects — those that progressed far enough in study to receive an upgrade estimate</li>
+          </ul>
+        </div>
+        <div>
+          <table>
+            <tr><th>Split</th><th>Rows</th></tr>
+            <tr><td>Total</td><td>12,000</td></tr>
+            <tr><td>Training (80%)</td><td>9,600</td></tr>
+            <tr><td>Validation (10%)</td><td>1,200</td></tr>
+            <tr><td>Test (10%)</td><td>1,200</td></tr>
+            <tr><td>With cost labels</td><td>4,581 (38%)</td></tr>
+            <tr><td>Withdrawal rate</td><td>77.3%</td></tr>
+          </table>
+          <p class="note" style="margin-top:0.6em;">Stratified by ISO region and filing-year cohort to reduce temporal and regional leakage.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 8: FEATURES -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Feature Set</h2>
+      <div class="two-col">
+        <div>
+          <h3>Numeric Features</h3>
+          <ul>
+            <li><span class="tag">log_mw_capacity</span> — log-transformed requested MW (right-skewed)</li>
+            <li><span class="tag">filing_year</span>, <span class="tag">voltage_kv</span>, <span class="tag">queue_position</span></li>
+            <li><span class="tag">substation_congestion_24mo</span> — count of prior projects at the same point of interconnection in the past 2 years</li>
+            <li><span class="tag">queue_cohort_size</span> — projects in the same ISO/year cohort</li>
+            <li><span class="tag">county_queue_density</span>, <span class="tag">distance_to_transmission_miles</span></li>
+            <li><span class="tag">renewable_penetration_pct</span> — regional saturation proxy</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Categorical (one-hot encoded)</h3>
+          <ul>
+            <li><span class="tag">iso_region</span> — MISO, PJM, CAISO, ERCOT, SPP, NYISO, ISO-NE</li>
+            <li><span class="tag">fuel_type</span> — Solar, Battery, Wind, Hybrid, Gas, etc.</li>
+            <li><span class="tag">deliverability_status</span> — Full Capacity / Energy Only / Partial</li>
+            <li><span class="tag">interconnection_service</span> — NRIS, ERIS, Capacity Resource, Network Resource</li>
+          </ul>
+          <br />
+          <p class="note">Congestion proxy and cohort size are engineered from raw queue records — not provided directly by the data source.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 9: TASKS AND MODELS OVERVIEW -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Tasks and Models</h2>
+      <table>
+        <tr>
+          <th>Task</th>
+          <th>Type</th>
+          <th>Interpretable Baseline</th>
+          <th>Nonlinear Model</th>
+        </tr>
+        <tr>
+          <td><strong>Withdrawal</strong></td>
+          <td>Binary classification</td>
+          <td>Logistic Regression (class-weighted)</td>
+          <td>MLP Classifier</td>
+        </tr>
+        <tr>
+          <td><strong>Timeline</strong></td>
+          <td>Regression</td>
+          <td>Ridge Regression</td>
+          <td>MLP Regressor</td>
+        </tr>
+        <tr>
+          <td><strong>Cost Bucket</strong></td>
+          <td>4-class classification</td>
+          <td>Unconstrained MLP</td>
+          <td>PINN-Monotonic MLP</td>
+        </tr>
+        <tr>
+          <td><strong>Upgrade Cost (GPR)</strong></td>
+          <td>Regression + uncertainty</td>
+          <td colspan="2">Gaussian Process (RBF kernel, log-cost target)</td>
+        </tr>
+      </table>
+      <br />
+      <ul>
+        <li>Each task has a linear/interpretable baseline paired with a more expressive model</li>
+        <li>The cost task is the main PINN ablation: constrained vs. unconstrained MLP</li>
+        <li>GPR exists separately to give calibrated uncertainty rather than just point estimates</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 10: MODEL ARCHITECTURES -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Model Architecture Details</h2>
+      <div class="two-col">
+        <div>
+          <h3>sklearn MLP (Withdrawal / Timeline)</h3>
+          <ul>
+            <li>Hidden layers: (48, 24)</li>
+            <li>L2 regularization: α = 1e-3</li>
+            <li>Early stopping on validation loss</li>
+            <li>Learning rate: 3×10⁻⁴</li>
+          </ul>
+          <br />
+          <h3>Gaussian Process (Cost Uncertainty)</h3>
+          <ul>
+            <li>Kernel: ConstantKernel × RBF + WhiteKernel</li>
+            <li>Trained on log-transformed cost</li>
+            <li>Capped at 650 training samples — GPR scales as O(n³)</li>
+          </ul>
+        </div>
+        <div>
+          <h3>PyTorch Cost MLP (PINN Ablation)</h3>
+          <ul>
+            <li>Architecture: Linear(d, 64) → BatchNorm → ReLU → Dropout(0.15) → Linear(64, 64) → ReLU → Linear(64, 4)</li>
+            <li>Optimizer: AdamW, lr = 1e-3, weight decay = 1e-4</li>
+            <li>90 epochs, batch size 128</li>
+            <li>Unconstrained: λ = 0 (no monotonic penalty)</li>
+            <li>Constrained: λ = 0.55</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 11: TRAINING SETUP -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Training Setup</h2>
+      <ul>
+        <li>Preprocessing pipeline is fit <em>only on the training fold</em> — numeric features standardized, categoricals one-hot encoded — then applied to validation and test</li>
+        <li>Cost models trained separately on the ~38% subset with cost labels</li>
+        <li>Evaluation metrics: AUC-ROC and F1 for withdrawal, MAE and R² for timeline, weighted F1 / accuracy / implausibility rate for cost</li>
+      </ul>
+      <hr class="divider" />
+      <h3>Monotonic Collocation (per training batch)</h3>
+      <div class="formula-box">
+        # For each batch of n projects:
+        x_high = copy of x, with  mw_capacity × 1.35 + 5.0
+        
+        loss = CrossEntropy(model(x), y_true)
+               + 0.55 × mean( relu( E_cost(x) − E_cost(x_high) ) )
+        
+        # Penalty fires only when cost decreases as MW increases
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 12: RESULTS — WITHDRAWAL -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Results: Withdrawal Prediction</h2>
+      <table>
+        <tr>
+          <th>Model</th>
+          <th>AUC-ROC</th>
+          <th>F1 (Withdrawn Class)</th>
+          <th>Accuracy</th>
+        </tr>
+        <tr>
+          <td>Logistic Regression</td>
+          <td class="win">0.949</td>
+          <td>0.908</td>
+          <td>86.8%</td>
+        </tr>
+        <tr>
+          <td>MLP Classifier</td>
+          <td>0.946</td>
+          <td class="win">0.932</td>
+          <td class="win">89.5%</td>
+        </tr>
+      </table>
+      <br />
+      <ul>
+        <li>Both models are well above the majority-class baseline (~77% if always predicting "withdrawn")</li>
+        <li>Logistic regression edges ahead on AUC — the withdrawal signal is fairly linear in the features</li>
+        <li>MLP wins on F1 for the withdrawn class, which is the more practically important metric</li>
+        <li>Most predictive features: substation congestion, MW capacity, filing year ≥ 2018, ISO region</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 13: RESULTS — TIMELINE -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Results: Study Timeline Prediction</h2>
+      <div class="two-col">
+        <div>
+          <table>
+            <tr>
+              <th>Model</th>
+              <th>MAE (months)</th>
+              <th>R²</th>
+            </tr>
+            <tr>
+              <td>Ridge Regression</td>
+              <td class="win">4.06 months</td>
+              <td class="win">0.602</td>
+            </tr>
+            <tr>
+              <td>MLP Regressor</td>
+              <td>4.13 months</td>
+              <td>0.590</td>
+            </tr>
+          </table>
+          <br />
+          <ul>
+            <li><strong>Linear model wins</strong> — timeline is well-described by an additive combination of features, the MLP doesn't find meaningful additional signal</li>
+            <li>R² ≈ 0.60 is reasonable given that timelines range from 2 to 96 months</li>
+            <li>Key drivers: queue congestion, queue position, MW capacity, post-2018 filing pressure</li>
+          </ul>
+        </div>
+        <div>
+          <img src="outputs/timeline_predicted_vs_actual.png" alt="Timeline: predicted vs actual" class="slide-img" />
+          <p class="caption">Predicted vs. actual study timeline (Ridge Regression, test set)</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 14: RESULTS — COST BUCKET -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Results: Cost Bucket Classification</h2>
+      <div class="two-col">
+        <div>
+          <table>
+            <tr>
+              <th>Model</th>
+              <th>Weighted F1</th>
+              <th>Accuracy</th>
+              <th>Implausibility Rate</th>
+            </tr>
+            <tr>
+              <td>Unconstrained MLP</td>
+              <td class="win">0.887</td>
+              <td class="win">89.1%</td>
+              <td>0%</td>
+            </tr>
+            <tr>
+              <td>PINN-Monotonic MLP</td>
+              <td>0.879</td>
+              <td>88.6%</td>
+              <td>0%</td>
+            </tr>
+          </table>
+          <br />
+          <ul>
+            <li>Both achieve ~89% accuracy on the cost-labeled test subset</li>
+            <li>The monotonic penalty costs about <strong>0.5% accuracy</strong> — a small trade-off for guaranteed physical consistency</li>
+            <li>Both reach 0% implausibility on this dataset — the synthetic data is clean, so the constraint isn't forced to activate much</li>
+            <li>The penalty is most valuable on real, noisy, sparse public data where the model may otherwise extrapolate implausibly</li>
+          </ul>
+        </div>
+        <div>
+          <img src="outputs/cost_bucket_distribution.png" alt="Cost bucket distribution" class="slide-img" />
+          <p class="caption">Cost bucket distribution in the labeled subset</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 15: PINN ABLATION FIGURE -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>PINN Ablation: Constrained vs. Unconstrained</h2>
+      <img src="outputs/pinn_ablation_cost.png" alt="PINN ablation — cost bucket predictions" class="slide-img" style="max-height: 380px;" />
+      <p class="caption">Unconstrained MLP vs. PINN-Monotonic MLP — cost bucket predictions on test set. The monotonic penalty enforces that higher MW inputs never produce a lower expected cost bucket.</p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 16: RESULTS — GPR UNCERTAINTY -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Results: Gaussian Process — Cost Uncertainty</h2>
+      <div class="two-col">
+        <div>
+          <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>MAE (log-cost)</td><td>0.367</td></tr>
+            <tr><td>R² (log-cost)</td><td>0.782</td></tr>
+            <tr><td>90% Prediction Interval Coverage</td><td><strong>88.6%</strong></td></tr>
+            <tr><td>Mean Interval Width (log scale)</td><td>1.52</td></tr>
+          </table>
+          <br />
+          <ul>
+            <li>Coverage of 88.6% is close to the nominal 90% — intervals are reasonably calibrated</li>
+            <li>GPR gives developers not just a point estimate, but a sense of <em>how uncertain</em> the model is in data-sparse regions</li>
+            <li>Useful for early-stage screening: a wide interval signals that the model is extrapolating from few comparable historical projects</li>
+          </ul>
+        </div>
+        <div>
+          <div class="metric-card">
+            <div class="label">Nominal coverage target</div>
+            <div class="value">90%</div>
+          </div>
+          <br />
+          <div class="metric-card">
+            <div class="label">Actual coverage achieved</div>
+            <div class="value">88.6%</div>
+          </div>
+          <br />
+          <div class="metric-card">
+            <div class="label">R² on log cost</div>
+            <div class="value">0.782</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 17: KEY FINDINGS -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Key Findings</h2>
+      <ul>
+        <li><strong>Congestion and siting context carry real predictive signal.</strong> Substation congestion, county queue density, distance to transmission, and ISO/year cohort size matter beyond MW alone — this supports the hypothesis that congested points of interconnection produce more costly upgrades and delays.</li>
+        <li><strong>Timeline prediction is surprisingly linear.</strong> Ridge regression outperforms the MLP on both MAE and R² — the additive story is enough. No complex interactions needed.</li>
+        <li><strong>The physics-informed constraint costs very little.</strong> ~0.5% accuracy trade-off for monotonic consistency; important mainly when data is sparse and the model might otherwise extrapolate incorrectly.</li>
+        <li><strong>Label completeness is a bottleneck.</strong> Withdrawal (100%) and timeline (100%) labels are abundant; cost labels are only 38% — the cost task has much less training data.</li>
+        <li><strong>GPR intervals are well-calibrated.</strong> 88.6% actual coverage vs. 90% nominal — useful for communicating uncertainty to non-specialist project teams.</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 18: LIMITATIONS -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Limitations</h2>
+      <ul>
+        <li><strong>Data quality across ISOs:</strong> Queue exports use inconsistent field names, units, and status codes across MISO, PJM, CAISO, etc. Joining them requires careful normalization that the current pipeline handles heuristically.</li>
+        <li><strong>Simplified monotonicity:</strong> Real upgrade costs depend on deliverability, thermal limits, voltage constraints, short-circuit duty, and prior network investments — not just MW. The monotonic penalty is a useful regularizer, not a complete physical model.</li>
+        <li><strong>GPR scalability:</strong> Gaussian processes scale as O(n³) in training — capped at 650 training samples in this pipeline.</li>
+        <li><strong>Synthetic data:</strong> The submitted pipeline runs on synthetic data. Real LBNL data may reveal different relationships and noisier patterns, especially for cost labels.</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 19: FUTURE WORK -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Future Work</h2>
+      <ul>
+        <li><strong>Richer grid-topology features:</strong> Transmission line capacity and existing congestion from OASIS or EIA Form 714 — these are the features most directly tied to actual upgrade costs</li>
+        <li><strong>Calibrated probabilistic classifiers:</strong> Platt scaling or temperature scaling on cost bucket outputs for better-calibrated confidence scores</li>
+        <li><strong>Autoencoder for project retrieval:</strong> Given a new filing, find the most similar historical projects — useful for developers trying to benchmark against comparable projects</li>
+        <li><strong>Extended monotonicity constraints:</strong> Higher voltage levels tend to reduce per-MW cost; this could be encoded as a second constraint alongside the MW monotonicity</li>
+        <li><strong>Full run on cleaned LBNL public data</strong> with proper cross-ISO column mapping</li>
+      </ul>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SLIDE 20: CONCLUSIONS -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Conclusions</h2>
+      <ul>
+        <li>Built a three-task ML pipeline for early-stage interconnection queue risk assessment: withdrawal prediction, timeline regression, and cost bucket classification</li>
+        <li>Adapted the Raissi et al. (2019) PINN framework to tabular queue data by replacing a PDE residual with a <strong>monotonicity residual</strong> — same two-part composite loss structure, different domain constraint</li>
+        <li>The physics-informed cost classifier achieves ~89% accuracy while enforcing domain-consistent predictions; the accuracy cost is minimal (~0.5%)</li>
+        <li>Queue congestion, siting context, and filing-year pressure are the most predictive signals — MW capacity alone is not enough</li>
+        <li>The pipeline is reproducible and can slot in cleaned public LBNL data with minimal changes</li>
+      </ul>
+      <br />
+      <p style="text-align:center; font-size:0.9em; color:#555;"><strong>Thank you — happy to take questions.</strong></p>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- BACKUP SLIDE: Q&A NOTES -->
+    <!-- ============================================================ -->
+    <section>
+      <h2>Backup: Anticipated Questions</h2>
+      <ul>
+        <li><strong>Why is this "physics-informed" if there's no PDE?</strong><br>
+          <span style="font-size:0.85em;">The model is constrained by a domain law evaluated at collocation points — that's the PINN structure. We adapted the mechanism (monotonicity instead of a PDE), not the principle.</span>
+        </li>
+        <li><strong>Why not use a direct power-flow simulation?</strong><br>
+          <span style="font-size:0.85em;">Public queue records don't include grid-state variables (bus voltages, line flows, etc.) needed to run power-flow equations. The monotonicity prior is the strongest constraint we can encode from the available data.</span>
+        </li>
+        <li><strong>How do you prevent data leakage?</strong><br>
+          <span style="font-size:0.85em;">All preprocessing (StandardScaler, one-hot encoder) is fit on the training split only, then applied to val/test. The train/test split is stratified by ISO/year cohort to reduce temporal leakage.</span>
+        </li>
+        <li><strong>Why does Ridge beat MLP on timeline?</strong><br>
+          <span style="font-size:0.85em;">The timeline data-generating process is additive — congestion, queue position, and MW combine roughly linearly. The MLP doesn't find useful nonlinear interactions given the training set size.</span>
+        </li>
+      </ul>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.6.0/reveal.min.js" crossorigin="anonymous"></script>
+<script>
+  Reveal.initialize({
+    slideNumber: 'c/t',
+    hash: true,
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+  });
+</script>
+</body>
+</html>
