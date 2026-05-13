@@ -82,4 +82,4 @@ docs/
 
 ## LLM Use Statement
 
-Cursor/GPT was used to help turn the project proposal, progress update, course deliverables, and research paper into a runnable codebase and draft documentation. The project logic, modeling scope, and scientific framing follow the provided course documents and proposal.
+Cursor/GPT was used to help with syntax completion as well as git commands during code writing as well as model training. The project logic, modeling scope, and scientific framing follow the provided course documents and proposal, and were largely ideated and written by Eshana Jain.
