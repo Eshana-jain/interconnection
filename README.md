@@ -7,15 +7,24 @@ The project reproduces the central training idea from Raissi, Perdikaris, and Ka
 ## What It Builds
 
 - Withdrawal prediction with logistic regression and neural-network classifiers.
-- Study timeline prediction with linear/Ridge and neural-network regressors.
-- Network upgrade cost bucket prediction with an unconstrained MLP and a physics-informed monotonic MLP.
-- Gaussian process regression on the cost subset to report calibrated 90% prediction intervals.
-- Reproducible figures and metrics for the final report and presentation.
-- Draft final-report and presentation scaffolding in `docs/`.
+- Queue timeline prediction with Ridge and neural-network regressors.
+- Reproducible figures, model metrics, and comparison tables.
+- Optional cost-model code is included, but the public LBNL workbook committed here does not include project-level network-upgrade cost labels, so cost models are skipped in the default real-data run.
+
+## Data Source
+
+The default training data is real public interconnection queue data, not generated sample data:
+
+- Raw workbook: `data/lbnl_ix_queue_data_file_thru2024_v2.xlsx`
+- Cleaned model input: `data/lbnl_queue_cleaned.csv`
+- Source: Lawrence Berkeley National Laboratory / Interconnection.fyi, *Queued Up: 2025 Edition*
+- Raw workbook URL: <https://eta-publications.lbl.gov/sites/default/files/2025-08/lbnl_ix_queue_data_file_thru2024_v2.xlsx>
+
+The raw workbook contains 36,441 project-level queue records through 2024. The cleaned CSV contains 31,039 rows after dropping rows without the fields needed for model training.
 
 ## Quick Start
 
-The pipeline runs out of the box with a synthetic queue dataset that matches the fields described in the proposal/progress update. The default row count is set to the proposal-scale working set. If a cleaned public queue CSV or Excel file is available, pass it with `--data`.
+The pipeline runs on `data/lbnl_queue_cleaned.csv` by default.
 
 ```bash
 python3 -m venv .venv
@@ -31,30 +40,11 @@ If dependencies are already installed globally, the final command is enough:
 PYTHONPATH=src python3 -m interconnection_ml.run_pipeline --output outputs
 ```
 
-## Optional Real Data
-
-Prepare a CSV or Excel file with these columns, using the same names where possible:
-
-- `project_id`
-- `iso_region`
-- `fuel_type`
-- `mw_capacity`
-- `filing_year`
-- `voltage_kv`
-- `queue_position`
-- `substation_id`
-- `withdrawn`
-- `timeline_months`
-- `network_upgrade_cost_musd` or `cost_bucket`
-- Optional context columns: `county`, `deliverability_status`, `interconnection_service`, `distance_to_transmission_miles`, and `renewable_penetration_pct`
-
-Then run:
+To rebuild the cleaned CSV from the raw LBNL workbook:
 
 ```bash
-PYTHONPATH=src python3 -m interconnection_ml.run_pipeline --data path/to/clean_queue.csv --output outputs
+python3 scripts/prepare_lbnl_data.py
 ```
-
-The loader imputes missing queue-position and voltage fields, engineers congestion/cohort features, and scopes cost modeling to rows with cost labels, matching the progress report.
 
 ## Outputs
 
@@ -62,12 +52,17 @@ After a successful run, `outputs/` contains:
 
 - `metrics.json`: all evaluation metrics.
 - `model_comparison.csv`: summary table for report figures.
-- `*.png`: EDA plots, model diagnostics, risk surfaces, feature importance, timeline residuals, cost confusion matrices, and PINN ablation plots.
-- `analysis_brief.md`: generated narrative notes for slides/report writing.
+- `*.png`: EDA plots, withdrawal diagnostics, risk surfaces, feature importance, and timeline residual plots.
 
 ## Project Structure
 
 ```text
+data/
+  lbnl_ix_queue_data_file_thru2024_v2.xlsx
+  lbnl_queue_cleaned.csv
+  README.md
+scripts/
+  prepare_lbnl_data.py
 src/interconnection_ml/
   data.py          Dataset loading, synthetic fallback, feature engineering
   features.py      Splits and preprocessing

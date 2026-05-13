@@ -106,8 +106,8 @@ def prepare_dataset(raw: pd.DataFrame) -> pd.DataFrame:
         "county": "Unknown",
         "deliverability_status": "Unknown",
         "interconnection_service": "Unknown",
-        "distance_to_transmission_miles": np.nan,
-        "renewable_penetration_pct": np.nan,
+        "distance_to_transmission_miles": 0.0,
+        "renewable_penetration_pct": 0.0,
     }
     for column, value in defaults.items():
         if column not in data:
@@ -129,9 +129,16 @@ def prepare_dataset(raw: pd.DataFrame) -> pd.DataFrame:
     data["deliverability_status"] = data["deliverability_status"].fillna("Unknown").astype(str)
     data["interconnection_service"] = data["interconnection_service"].fillna("Unknown").astype(str)
 
-    for column in ["voltage_kv", "queue_position", "distance_to_transmission_miles", "renewable_penetration_pct"]:
+    numeric_fallbacks = {
+        "voltage_kv": 138.0,
+        "queue_position": 0.0,
+        "distance_to_transmission_miles": 0.0,
+        "renewable_penetration_pct": 0.0,
+    }
+    for column in numeric_fallbacks:
         data[column] = data.groupby("iso_region")[column].transform(lambda s: s.fillna(s.median()))
         data[column] = data[column].fillna(data[column].median())
+        data[column] = data[column].fillna(numeric_fallbacks[column])
 
     if "substation_congestion_24mo" not in data:
         data = add_congestion_proxy(data)

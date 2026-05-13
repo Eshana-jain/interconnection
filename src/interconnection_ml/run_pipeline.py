@@ -22,8 +22,8 @@ from .models import train_cost_bucket_models, train_gpr_cost_model, train_timeli
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run the interconnection queue ML project pipeline.")
-    parser.add_argument("--data", default=None, help="Optional cleaned public queue CSV.")
-    parser.add_argument("--synthetic-rows", type=int, default=12000, help="Rows to generate when --data is omitted.")
+    parser.add_argument("--data", default="data/lbnl_queue_cleaned.csv", help="Cleaned queue CSV used for model training.")
+    parser.add_argument("--synthetic-rows", type=int, default=12000, help="Rows to generate only when --data is omitted.")
     parser.add_argument("--output", default="outputs", help="Directory for metrics and plots.")
     parser.add_argument("--seed", type=int, default=42)
     return parser.parse_args()
